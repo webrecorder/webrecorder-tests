@@ -1,6 +1,7 @@
 #!/bin/bash
 
-warc_s3="https://s3.amazonaws.com/webrecorder-builds/tests"
+s3="https://s3.amazonaws.com/webrecorder-builds"
+player_version="develop"
 
 download_player() {
 	case $(uname -s) in
@@ -14,7 +15,7 @@ download_player() {
 
 	if [ ! -f "./bin/webrecorder-player" ]; then
 		printf "\e[31m PLAYER NOT FOUND \e[39m\n"
-		wget -O bin/webrecorder-player "https://s3.amazonaws.com/webrecorder-builds/webrecorder-player/develop/$player"
+		wget -O bin/webrecorder-player "$s3/webrecorder-player/$player_version/$player"
 		chmod +x ./bin/webrecorder-player
 	else
 		printf "\e[32m PLAYER FOUND \e[39m\n"
@@ -27,7 +28,7 @@ download_warcs() {
 	for warc in $warcs; do
 		if [ ! -f "./warcs/$warc" ]; then
 			printf "\e[31m WARC NOT FOUND \e[39m%s\n" "$warc"
-			wget -P ./warcs "$warc_s3"/"$warc"
+			wget -P ./warcs "$s3/tests/$warc"
 		else
 			printf "\e[32m WARC FOUND \e[39m%s\n" "$warc"
 		fi
