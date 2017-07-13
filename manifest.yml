@@ -1,32 +1,32 @@
 tests:
-  youtube-video:
+  TestYoutube:
     warc-file: yt-20170330012230.warc.gz
+    player_port: "8090"
     recordings:
-      - 
-        description: "Procrastination Polka (2015)"
-        url: https://www.youtube.com/watch?v=aT-Up5Y4uRI
+      - description: Procrastination Polka (2015)
+        url: 'https://www.youtube.com/watch?v=aT-Up5Y4uRI'
         time: 20150110072312
-        test: 
-      - 
-        description: "Procrastination Polka (2017)"
-        url: https://www.youtube.com/watch?v=aT-Up5Y4uRI
+        test: null
+      - description: Procrastination Polka (2017)
+        url: 'https://www.youtube.com/watch?v=aT-Up5Y4uRI'
         time: 20170321044139
-        test: 
+        test: null
 
-  bbc-video:
+  TestBbc:
     warc-file: bbc-future-20170504184010.warc.gz
+    player_port: "8091"    
     recordings:
-    -
-      description: "bbc video"
-      url: http://www.bbc.com/future/story/20170313-the-era-of-computerised-catastrophic-failure-is-here
-      time: 20170410114611
-      test: 
-  
-  wikipedia-sopa:
-     warc-file: sopa-wikipedia-homepage.warc.gz
-     recordings:
-      -
-        description: "wikipedia sopa"
-        url: http://en.wikipedia.org/wiki/Main_Page
+      - description: bbc video
+        url: >-
+          http://www.bbc.com/future/story/20170313-the-era-of-computerised-catastrophic-failure-is-here
+        time: 20170410114611
+        test: null
+
+  TestWikipediaSopa:
+    warc-file: sopa-wikipedia-homepage.warc.gz
+    player_port: "8092"
+    recordings:
+      - description: wikipedia sopa
+        url: 'http://en.wikipedia.org/wiki/Main_Page'
         time: 20120118143132
-        test:
+        test: null
