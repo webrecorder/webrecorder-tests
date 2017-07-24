@@ -1,4 +1,5 @@
 import os
+import pty
 import subprocess
 import sys
 import time
@@ -29,25 +30,29 @@ def load_manifest(request):
 def player(request):
     """ 
     starts webrecorder-player with port and warc-file from self.conf
-    the player POpen object is available from self.player
-    TODO: fix teardown, currently not working.
     """
     warc = os.path.join("warcs", request.cls.conf['warc-file'])
     port = request.cls.conf['player_port']
 
-    player = subprocess.Popen(
-        ["./bin/webrecorder-player", "--port", port, "--no-browser", warc],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL)
+    master, slave = pty.openpty()
 
-    time.sleep(5)
+    player_process = subprocess.Popen(
+        ["./bin/webrecorder-player", "--port", port, "--no-browser", warc],
+        stdout=slave, stderr=slave)
+
+    stdout = os.fdopen(master)
+    while True:
+        out = stdout.readline()
+        if f'starting server on {port}' in out.rstrip():
+            break
+    stdout.close()
 
     if request.cls is not None:
-        request.cls.player = player
+        request.cls.player = player_process
 
-    yield player
+    yield player_process
 
-    os.kill(player.pid, signal.SIGINT)
+    subprocess.run(["pkill", "webrecorder-player"])
 
 
 @pytest.fixture(scope="class")
