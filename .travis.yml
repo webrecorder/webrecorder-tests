@@ -20,7 +20,7 @@ before_install:
   - sudo apt install libgconf-2-4
   - wget -nc -O - https://chromedriver.storage.googleapis.com/2.31/chromedriver_linux64.zip | gunzip - > /tmp/chromedriver
   - chmod +x /tmp/chromedriver
-  - mv /tmp/chromedriver /usr/local/bin/chromedriver
+  - sudo mv /tmp/chromedriver /usr/local/bin/chromedriver
 
 install:
   - ./bootstrap.sh
