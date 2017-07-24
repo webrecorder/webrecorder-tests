@@ -13,7 +13,7 @@ addons:
   chrome: stable
 
 env:
-  - CHROME="google-chrome-stable"
+  - CHROME="/usr/bin/google-chrome-stable"
 
 before_install:
   - sudo apt-get -qq update
