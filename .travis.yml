@@ -17,10 +17,12 @@ env:
 
 before_install:
   - ./bootstrap.sh
+  - sudo apt-get -qq update
+  - sudo apt install libgconf-2-4
+  - wget -nc -O - https://chromedriver.storage.googleapis.com/2.31/chromedriver_linux64.zip | gunzip - > /usr/local/bin/chromedriver
+  - chmod 777 /usr/local/bin/chromedriver
 
 install:
-  - sudo apt-get -qq update
-  - sudo apt install chromedriver
   - pip install -r requirements.txt
 
 script: 
