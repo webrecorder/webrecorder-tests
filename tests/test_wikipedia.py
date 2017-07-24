@@ -18,6 +18,13 @@ class TestWikipediaSopa(object):
 
         iframe = self.driver.find_elements_by_tag_name('iframe')[0]
         self.driver.switch_to_frame(iframe)
-        sopa_overlay = self.driver.find_element_by_id("mw-sopaOverlay")
+        # sopa_overlay = self.driver.find_element_by_id("mw-sopaOverlay")
+
+        try:
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, "mw-sopaOverlay"))
+            )
+        finally:
+            sopa_overlay = self.driver.find_element_by_id("mw-sopaOverlay")
 
         assert sopa_overlay.text.splitlines()[0] == "Imagine a World"
