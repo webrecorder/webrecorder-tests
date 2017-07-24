@@ -19,8 +19,8 @@ before_install:
   - ./bootstrap.sh
 
 install:
-  - apt-get -qq update
-  - apt install chromedriver
+  - sudo apt-get -qq update
+  - sudo apt install chromedriver
   - pip install -r requirements.txt
 
 script: 
