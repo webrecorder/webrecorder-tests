@@ -34,17 +34,18 @@ def player(request):
     warc = os.path.join("warcs", request.cls.conf['warc-file'])
     port = request.cls.conf['player_port']
 
-    master, slave = pty.openpty()
+    primary, secondary = pty.openpty()
 
     player_process = subprocess.Popen(
         ["./bin/webrecorder-player", "--port", port, "--no-browser", warc],
-        stdout=slave, stderr=slave)
+        stdout=secondary, stderr=secondary)
 
-    stdout = os.fdopen(master)
+    stdout = os.fdopen(primary)
     while True:
         out = stdout.readline()
-        if f'starting server on {port}' in out.rstrip():
+        if 'starting server on {port}'.format(port=port) in out.rstrip():
             break
+
     stdout.close()
 
     if request.cls is not None:
@@ -52,7 +53,8 @@ def player(request):
 
     yield player_process
 
-    subprocess.run(["pkill", "webrecorder-player"])
+    player_process.terminate()
+    #subprocess.run(["pkill", "webrecorder-player"])
 
 
 @pytest.fixture(scope="class")

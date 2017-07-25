@@ -14,7 +14,7 @@ class TestYoutube(object):
         url = self.conf['recordings'][0]['url']
         time = self.conf['recordings'][0]['time']
         port = self.conf['player_port']
-        player_url = f'http://localhost:{port}/local/collection/{time}/{url}'
+        player_url = 'http://localhost:{port}/local/collection/{time}/{url}'.format(port=port, time=time, url=url)
 
         self.driver.get(player_url)
 
