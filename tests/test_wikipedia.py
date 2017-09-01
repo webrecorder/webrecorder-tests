@@ -12,19 +12,34 @@ class TestWikipediaSopa(object):
         url = self.conf['recordings'][0]['url']
         time = self.conf['recordings'][0]['time']
         port = self.conf['player_port']
-        player_url = 'http://localhost:{port}/local/collection/{time}/{url}'.format(port=port, time=time, url=url)
+        player_url = 'http://localhost:{port}/local/collection/{time}/{url}'.format(
+            port=port, time=time, url=url)
 
         self.driver.get(player_url)
 
         iframe = self.driver.find_elements_by_tag_name('iframe')[0]
         self.driver.switch_to_frame(iframe)
-        # sopa_overlay = self.driver.find_element_by_id("mw-sopaOverlay")
 
         try:
-            element = WebDriverWait(self.driver, 10).until(
+            element = WebDriverWait(self.driver, 40).until(
                 EC.presence_of_element_located((By.ID, "mw-sopaOverlay"))
             )
         finally:
             sopa_overlay = self.driver.find_element_by_id("mw-sopaOverlay")
 
         assert sopa_overlay.text.splitlines()[0] == "Imagine a World"
+
+    def test_sopa_overlay_js(self):
+        url = self.conf['recordings'][0]['url']
+        time = self.conf['recordings'][0]['time']
+        port = self.conf['player_port']
+        player_url = 'http://localhost:{port}/local/collection/{time}/{url}'.format(
+            port=port, time=time, url=url)
+
+        self.driver.implicitly_wait(10)
+        self.driver.get(player_url)
+
+        js = open("js/wikipedia/overlay.js", 'r').read()
+
+        txt = self.driver.execute_script(js)
+        assert txt == "Imagine a World"
