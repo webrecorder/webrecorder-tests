@@ -11,14 +11,24 @@ from selenium import webdriver
 
 @pytest.fixture(scope="class")
 def load_manifest(request):
-    """ 
-    Load from yaml manifest all metadata of current test 
-    class and make them available in self.conf 
+    """
+    Load from yaml manifest all metadata of current test
+    class and make them available in self.conf
     """
     with open('manifest.yml', 'r') as m:
         manifest = yaml.load(m)
 
     conf = manifest['tests'][request.node.name]
+
+    if len(conf['recordings']) == 1:
+        player_url = 'http://localhost:{port}/local/collection/{time}/{url}'.format(
+            port=conf['player_port'], time=conf['recordings'][0]['time'], url=conf['recordings'][0]['url'])
+        conf['player_url'] = player_url
+    else:
+        conf['player_url'] = []
+        for recordings in conf['recordings']:
+            conf['player_url'].append('http://localhost:{port}/local/collection/{time}/{url}'.format(
+                port=conf['player_port'], time=recordings['time'], url=recordings['url']))
 
     if request.cls is not None:
         request.cls.conf = conf
@@ -28,7 +38,7 @@ def load_manifest(request):
 
 @pytest.fixture(scope="class")
 def player(request):
-    """ 
+    """
     starts webrecorder-player with port and warc-file from self.conf
     """
     warc = os.path.join("warcs", request.cls.conf['warc-file'])
@@ -54,15 +64,15 @@ def player(request):
     yield player_process
 
     player_process.terminate()
-    #subprocess.run(["pkill", "webrecorder-player"])
+    # subprocess.run(["pkill", "webrecorder-player"])
 
 
 @pytest.fixture(scope="class")
 def browser_driver(request):
-    """ 
+    """
     starts a selenium driver to a local chrome headless
     the driver is available from self.driver
-    TODO: implement logic to use SAUCELABS or remote selenium 
+    TODO: implement logic to use SAUCELABS or remote selenium
     """
     try:
         chrome = os.environ["CHROME"]
