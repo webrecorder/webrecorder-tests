@@ -9,12 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 class TestWikipediaSopa(object):
 
     def test_sopa_overlay(self):
-        url = self.conf['recordings'][0]['url']
-        time = self.conf['recordings'][0]['time']
-        port = self.conf['player_port']
-        player_url = 'http://localhost:{port}/local/collection/{time}/{url}'.format(
-            port=port, time=time, url=url)
-
+        player_url = self.conf['player_url']
         self.driver.get(player_url)
 
         iframe = self.driver.find_elements_by_tag_name('iframe')[0]
@@ -30,13 +25,7 @@ class TestWikipediaSopa(object):
         assert sopa_overlay.text.splitlines()[0] == "Imagine a World"
 
     def test_sopa_overlay_js(self):
-        url = self.conf['recordings'][0]['url']
-        time = self.conf['recordings'][0]['time']
-        port = self.conf['player_port']
-        player_url = 'http://localhost:{port}/local/collection/{time}/{url}'.format(
-            port=port, time=time, url=url)
-
-        self.driver.implicitly_wait(10)
+        player_url = self.conf['player_url']
         self.driver.get(player_url)
 
         js = open("js/wikipedia/overlay.js", 'r').read()
