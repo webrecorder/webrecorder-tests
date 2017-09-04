@@ -7,4 +7,4 @@ video.onplaying = function() {
 
 setTimeout(function() {
   callback("notplayed");
-}, 2000);
+}, 4000);
