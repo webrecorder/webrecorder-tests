@@ -25,6 +25,16 @@ class TestYoutube(object):
 
         js = open("js/youtube/video_duration.js", 'r').read()
 
-        self.driver.set_script_timeout(1)
+        self.driver.set_script_timeout(2000)
         video_duration = self.driver.execute_async_script(js)
-        assert video_duration == 116.471293
+        assert video_duration == 115.960454
+
+    def test_video_playing(self):
+        player_url = self.conf['player_url'][0]
+        self.driver.get(player_url)
+
+        js = open("js/youtube/video_playing.js", 'r').read()
+
+        self.driver.set_script_timeout(2000)
+        video_play = self.driver.execute_async_script(js)
+        assert video_play == "play"
