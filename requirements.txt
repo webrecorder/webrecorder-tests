@@ -1,3 +1,6 @@
 pytest
 selenium
 PyYAML
+pytest-asyncio
+pyppeteer
+expects
