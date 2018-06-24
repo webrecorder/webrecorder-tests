@@ -1,95 +1,100 @@
+import asyncio
 import os
-import pty
-import subprocess
-import sys
-import time
-import signal
-import yaml
+from typing import Generator, AsyncGenerator, Any
+
 import pytest
-from selenium import webdriver
+import uvloop
+from _pytest.fixtures import SubRequest
+from _pytest.mark import MarkInfo
+from _pytest.python import FunctionDefinition
+from _pytest.python import Metafunc
+from aiohttp import ClientSession, ClientConnectorError
+from async_timeout import timeout
+from simplechrome import Chrome
+from simplechrome import launch
+
+from helpers import load_conifg, Context
 
 
-@pytest.fixture(scope="class")
-def load_manifest(request):
-    """
-    Load from yaml manifest all metadata of current test
-    class and make them available in self.conf
-    """
-    with open('manifest.yml', 'r') as m:
-        manifest = yaml.load(m)
-
-    conf = manifest['tests'][request.node.name]
-
-    if len(conf['recordings']) == 1:
-        player_url = 'http://localhost:{port}/local/collection/{time}/{url}'.format(
-            port=conf['player_port'], time=conf['recordings'][0]['time'], url=conf['recordings'][0]['url'])
-        conf['player_url'] = player_url
-    else:
-        conf['player_url'] = []
-        for recordings in conf['recordings']:
-            conf['player_url'].append('http://localhost:{port}/local/collection/{time}/{url}'.format(
-                port=conf['player_port'], time=recordings['time'], url=recordings['url']))
-
-    if request.cls is not None:
-        request.cls.conf = conf
-
-    yield conf
+def pytest_generate_tests(metafunc: Metafunc):
+    fndef: FunctionDefinition = metafunc.definition
+    uconfm: MarkInfo = fndef.get_marker("usemanifest")
+    if uconfm:
+        rootdir = metafunc.config.rootdir
+        config = load_conifg(rootdir, uconfm.args[0])
+        warcp = os.path.join(rootdir, "warcs", config["warc-file"])
+        cntx_seed = dict(
+            player=dict(
+                exe=os.path.join(rootdir, "bin/webrecorder-player"),
+                port=f"{config.get('player_port')}",
+                warcp=warcp,
+            ),
+            url=(
+                f"http://localhost:{config.get('player_port')}/local/collection/"
+                f"{config.get('time')}/{config.get('url')}"
+            ),
+        )
+        # local/collection/{time}/{url}
+        metafunc.parametrize("ctx", [cntx_seed], True)
+        # print(Path(confp, os.getcwd()), '\n')
+        # print(Path(os.getcwd(), confp), '\n')
+        # print(confp, os.getcwd(), '\n')
 
 
-@pytest.fixture(scope="class")
-def player(request):
-    """
-    starts webrecorder-player with port and warc-file from self.conf
-    """
-    warc = os.path.join("warcs", request.cls.conf['warc-file'])
-    port = request.cls.conf['player_port']
-
-    primary, secondary = pty.openpty()
-
-    player_process = subprocess.Popen(
-        ["./bin/webrecorder-player", "--port", port, "--no-browser", warc],
-        stdout=secondary, stderr=secondary)
-
-    stdout = os.fdopen(primary)
-    while True:
-        out = stdout.readline()
-        if 'starting server on {port}'.format(port=port) in out.rstrip():
-            break
-
-    stdout.close()
-
-    if request.cls is not None:
-        request.cls.player = player_process
-
-    yield player_process
-
-    player_process.terminate()
-    # subprocess.run(["pkill", "webrecorder-player"])
+@pytest.yield_fixture()
+def event_loop() -> Generator[uvloop.Loop, Any, None]:
+    loop = uvloop.new_event_loop()
+    yield loop
+    loop.close()
 
 
-@pytest.fixture(scope="class")
-def browser_driver(request):
-    """
-    starts a selenium driver to a local chrome headless
-    the driver is available from self.driver
-    TODO: implement logic to use SAUCELABS or remote selenium
-    """
+@pytest.fixture
+async def chrome() -> AsyncGenerator[Chrome, Any]:
+    chrome = await launch()
+    yield chrome
     try:
-        chrome = os.environ["CHROME"]
-    except KeyError:
-        print("set CHROME env to chrome path", file=sys.stderr)
-        sys.exit(1)
+        await chrome.close()
+    except:
+        pass
 
-    opts = webdriver.ChromeOptions()
-    opts.binary_location = chrome
-    opts.add_argument("headless")
-    opts.add_argument("disable-gpu")
-    driver = webdriver.Chrome(chrome_options=opts)
 
-    if request.cls is not None:
-        request.cls.driver = driver
+async def check_player(url: str) -> None:
+    async with ClientSession() as session:
+        for _ in range(100):
+            await asyncio.sleep(0.5)
+            try:
+                await session.get(url)
+                break
+            except ClientConnectorError as cce:
+                print(cce)
+                continue
 
-    yield driver
 
-    driver.close()
-    driver.quit()
+async def create_player(exe: str, port: str, warcp: str, loop: uvloop.Loop):
+    process = await asyncio.create_subprocess_exec(
+        *[exe, "--port", port, "--no-browser", warcp],
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.DEVNULL,
+        loop=loop,
+    )
+    async with timeout(10) as to:
+        await check_player(f"http://localhost:{port}")
+    return process
+
+
+@pytest.fixture
+async def ctx(
+    request: SubRequest, event_loop: uvloop.Loop, chrome: Chrome
+) -> AsyncGenerator[Context, Any]:
+    seed = request.param
+    player = seed.get("player")
+    print(player, "\n")
+    pprocess = await create_player(
+        player.get("exe"), player.get("port"), player.get("warcp"), event_loop
+    )
+    page = await chrome.newPage()
+    request.addfinalizer(lambda: pprocess.terminate())
+    yield Context(event_loop, page, seed.get("url"))
+    # async with aiofiles.open(request.param) as iin:
+    #     mnfst = yaml.load(await iin.read())
+    # return mnfst
