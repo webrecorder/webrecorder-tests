@@ -1,100 +1,117 @@
-import asyncio
+import collections
 import os
-from typing import Generator, AsyncGenerator, Any
+import pty
+import subprocess
+from typing import Generator, AsyncGenerator, Any, Optional
 
+import psutil
 import pytest
 import uvloop
+import yaml
 from _pytest.fixtures import SubRequest
-from _pytest.mark import MarkInfo
-from _pytest.python import FunctionDefinition
-from _pytest.python import Metafunc
-from aiohttp import ClientSession, ClientConnectorError
-from async_timeout import timeout
-from simplechrome import Chrome
+from simplechrome import Chrome, Page
 from simplechrome import launch
 
-from helpers import load_conifg, Context
+
+def reaper(oproc):
+    def kill_it():
+        process = psutil.Process(oproc.pid)
+        for proc in process.children(recursive=True):
+            proc.kill()
+        process.kill()
+
+    return kill_it
 
 
-def pytest_generate_tests(metafunc: Metafunc):
-    fndef: FunctionDefinition = metafunc.definition
-    uconfm: MarkInfo = fndef.get_marker("usemanifest")
-    if uconfm:
-        rootdir = metafunc.config.rootdir
-        config = load_conifg(rootdir, uconfm.args[0])
-        warcp = os.path.join(rootdir, "warcs", config["warc-file"])
-        cntx_seed = dict(
-            player=dict(
-                exe=os.path.join(rootdir, "bin/webrecorder-player"),
-                port=f"{config.get('player_port')}",
-                warcp=warcp,
-            ),
-            url=(
-                f"http://localhost:{config.get('player_port')}/local/collection/"
-                f"{config.get('time')}/{config.get('url')}"
-            ),
-        )
-        # local/collection/{time}/{url}
-        metafunc.parametrize("ctx", [cntx_seed], True)
-        # print(Path(confp, os.getcwd()), '\n')
-        # print(Path(os.getcwd(), confp), '\n')
-        # print(confp, os.getcwd(), '\n')
+def load_file(p) -> str:
+    with p.open("r") as iin:
+        return iin.read()
 
 
-@pytest.yield_fixture()
-def event_loop() -> Generator[uvloop.Loop, Any, None]:
+def has_parent(request: SubRequest, parent_name: str) -> bool:
+    parent = getattr(request, "_parent_request", None)
+    if parent is not None:
+        return parent.fixturename == parent_name
+    return False
+
+
+async def safe_launch(opts: Optional[dict]) -> Chrome:
+    if opts is not None:
+        if opts.get("exe"):
+            opts["executablePath"] = opts.get("exe")
+    return await launch(options=opts)
+
+
+@pytest.fixture(scope="class")
+def configured(request: SubRequest) -> None:
+    cls = request.cls
+    mani_p = cls.manifest
+    fspath = request.session.fspath
+    config = yaml.load(load_file(fspath / mani_p))
+    cls.player = (
+        str(fspath / "bin/webrecorder-player"),
+        f"{config.get('player_port')}",
+        config["warc-file"],
+    )
+    _js = config.get("javascript")
+    if _js:
+        if isinstance(_js, dict):
+            js = dict()
+            for k, v in _js.items():
+                js[k] = load_file(fspath / v)
+        elif isinstance(_js, collections.Iterable):
+            js = list()
+            for p in _js:
+                js.append(load_file(fspath / p))
+        else:
+            js = load_file(fspath / _js)
+        cls.js = js
+    cls.url = (
+        f"http://localhost:{config.get('player_port')}/local/collection/"
+        f"{config.get('time')}/{config.get('url')}"
+    )
+    cls.chrome_opts = config.get("chrome")
+    yield
+
+
+@pytest.fixture(scope="class")
+def player(request: SubRequest) -> None:
+    exe, port, warcp = request.cls.player
+    primary, secondary = pty.openpty()
+    proc = subprocess.Popen(
+        [exe, "--port", port, "--no-browser", warcp], stdout=secondary, stderr=secondary
+    )
+    request.addfinalizer(reaper(proc))
+    stdout = os.fdopen(primary)
+    while True:
+        out = stdout.readline()
+        if f"APP_HOST=http://localhost:{port}" in out.rstrip():
+            break
+    stdout.close()
+    yield
+
+
+@pytest.fixture(scope="class")
+def event_loop(request: SubRequest) -> Generator[uvloop.Loop, Any, None]:
     loop = uvloop.new_event_loop()
+    if request.cls:
+        request.cls.loop = loop
     yield loop
     loop.close()
 
 
-@pytest.fixture
-async def chrome() -> AsyncGenerator[Chrome, Any]:
-    chrome = await launch()
-    yield chrome
-    try:
-        await chrome.close()
-    except:
-        pass
+@pytest.fixture(scope="class")
+async def chrome(request: SubRequest) -> AsyncGenerator[Chrome, Any]:
+    cls = request.cls
+    browser = await safe_launch(getattr(cls, "chrome_opts", None))
+    if not has_parent(request, "new_tab"):
+        cls.chrome = browser
+    yield browser
+    await browser.close()
 
 
-async def check_player(url: str) -> None:
-    async with ClientSession() as session:
-        for _ in range(100):
-            await asyncio.sleep(0.5)
-            try:
-                await session.get(url)
-                break
-            except ClientConnectorError as cce:
-                print(cce)
-                continue
-
-
-async def create_player(exe: str, port: str, warcp: str, loop: uvloop.Loop):
-    process = await asyncio.create_subprocess_exec(
-        *[exe, "--port", port, "--no-browser", warcp],
-        stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.DEVNULL,
-        loop=loop,
-    )
-    async with timeout(10) as to:
-        await check_player(f"http://localhost:{port}")
-    return process
-
-
-@pytest.fixture
-async def ctx(
-    request: SubRequest, event_loop: uvloop.Loop, chrome: Chrome
-) -> AsyncGenerator[Context, Any]:
-    seed = request.param
-    player = seed.get("player")
-    print(player, "\n")
-    pprocess = await create_player(
-        player.get("exe"), player.get("port"), player.get("warcp"), event_loop
-    )
+@pytest.fixture(scope="class")
+async def new_tab(request: SubRequest, chrome: Chrome) -> AsyncGenerator[Page, Any]:
     page = await chrome.newPage()
-    request.addfinalizer(lambda: pprocess.terminate())
-    yield Context(event_loop, page, seed.get("url"))
-    # async with aiofiles.open(request.param) as iin:
-    #     mnfst = yaml.load(await iin.read())
-    # return mnfst
+    request.cls.tab = page
+    yield page

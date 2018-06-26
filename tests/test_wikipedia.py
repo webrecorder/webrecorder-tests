@@ -1,34 +1,17 @@
 import pytest
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from async_timeout import timeout
+from .wrtest import WRTest
 
 
-@pytest.mark.usefixtures("load_manifest", "player", "browser_driver")
-class TestWikipediaSopa(object):
+@pytest.mark.usefixtures("configured", "player", "new_tab")
+class TestWikipediaSopa(WRTest):
+    manifest = "manifests/wikisopa.yml"
 
-    def test_sopa_overlay(self):
-        player_url = self.conf['player_url']
-        self.driver.get(player_url)
-
-        iframe = self.driver.find_elements_by_tag_name('iframe')[0]
-        self.driver.switch_to_frame(iframe)
-
-        try:
-            element = WebDriverWait(self.driver, 40).until(
-                EC.presence_of_element_located((By.ID, "mw-sopaOverlay"))
-            )
-        finally:
-            sopa_overlay = self.driver.find_element_by_id("mw-sopaOverlay")
-
-        assert sopa_overlay.text.splitlines()[0] == "Imagine a World"
-
-    def test_sopa_overlay_js(self):
-        player_url = self.conf['player_url']
-        self.driver.get(player_url)
-
-        js = open("js/wikipedia/overlay.js", 'r').read()
-
-        txt = self.driver.execute_script(js)
-        assert txt == "Imagine a World"
+    @pytest.mark.asyncio
+    async def test_sopa_overlay(self):
+        replay_frame = await self.goto_test()
+        async with timeout(10) as to:
+            await replay_frame.waitFor("#mw-sopaOverlay")
+        overlay = await replay_frame.J("#mw-sopaOverlay")
+        text = await replay_frame.evaluate(self.js.get("overlay"), overlay)
+        text | self.should.be.equal.to("Imagine a World")
