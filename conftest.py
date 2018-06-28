@@ -1,93 +1,33 @@
-import collections
-import os
-import pty
-import subprocess
-from typing import Generator, AsyncGenerator, Any, Optional
+from typing import Generator, AsyncGenerator, Any
 
-import psutil
 import pytest
 import uvloop
-import yaml
 from _pytest.fixtures import SubRequest
+from _pytest.python import Metafunc, FunctionDefinition
 from simplechrome import Chrome, Page
-from simplechrome import launch
+
+from test_setup.configurations import autowire_test, configure_test
+from test_setup.processes import launch_chrome, launch_wr_player
+from test_setup.util import has_parent
 
 
-def reaper(oproc):
-    def kill_it():
-        process = psutil.Process(oproc.pid)
-        for proc in process.children(recursive=True):
-            proc.kill()
-        process.kill()
-
-    return kill_it
-
-
-def load_file(p) -> str:
-    with p.open("r") as iin:
-        return iin.read()
-
-
-def has_parent(request: SubRequest, parent_name: str) -> bool:
-    parent = getattr(request, "_parent_request", None)
-    if parent is not None:
-        return parent.fixturename == parent_name
-    return False
-
-
-async def safe_launch(opts: Optional[dict]) -> Chrome:
-    if opts is not None:
-        if opts.get("exe"):
-            opts["executablePath"] = opts.get("exe")
-    return await launch(options=opts)
+def pytest_generate_tests(metafunc: Metafunc):
+    fndef: FunctionDefinition = metafunc.definition
+    if fndef.get_marker("autowired"):
+        autowire_test(metafunc)
 
 
 @pytest.fixture(scope="class")
 def configured(request: SubRequest) -> None:
-    cls = request.cls
-    mani_p = cls.manifest
-    fspath = request.session.fspath
-    config = yaml.load(load_file(fspath / mani_p))
-    cls.player = (
-        str(fspath / "bin/webrecorder-player"),
-        f"{config.get('player_port')}",
-        config["warc-file"],
-    )
-    _js = config.get("javascript")
-    if _js:
-        if isinstance(_js, dict):
-            js = dict()
-            for k, v in _js.items():
-                js[k] = load_file(fspath / v)
-        elif isinstance(_js, collections.Iterable):
-            js = list()
-            for p in _js:
-                js.append(load_file(fspath / p))
-        else:
-            js = load_file(fspath / _js)
-        cls.js = js
-    cls.url = (
-        f"http://localhost:{config.get('player_port')}/local/collection/"
-        f"{config.get('time')}/{config.get('url')}"
-    )
-    cls.chrome_opts = config.get("chrome")
+    """Fixture to configure the test class with the manifest information"""
+    configure_test(request)
     yield
 
 
 @pytest.fixture(scope="class")
-def player(request: SubRequest) -> None:
-    exe, port, warcp = request.cls.player
-    primary, secondary = pty.openpty()
-    proc = subprocess.Popen(
-        [exe, "--port", port, "--no-browser", warcp], stdout=secondary, stderr=secondary
-    )
-    request.addfinalizer(reaper(proc))
-    stdout = os.fdopen(primary)
-    while True:
-        out = stdout.readline()
-        if f"APP_HOST=http://localhost:{port}" in out.rstrip():
-            break
-    stdout.close()
+def wr_player(request: SubRequest) -> None:
+    """Fixture to launch webrecorder player"""
+    launch_wr_player(request)
     yield
 
 
@@ -102,8 +42,9 @@ def event_loop(request: SubRequest) -> Generator[uvloop.Loop, Any, None]:
 
 @pytest.fixture(scope="class")
 async def chrome(request: SubRequest) -> AsyncGenerator[Chrome, Any]:
+    """Fixture to launch Google Chrome"""
     cls = request.cls
-    browser = await safe_launch(getattr(cls, "chrome_opts", None))
+    browser = await launch_chrome(cls)
     if not has_parent(request, "new_tab"):
         cls.chrome = browser
     yield browser
@@ -111,7 +52,12 @@ async def chrome(request: SubRequest) -> AsyncGenerator[Chrome, Any]:
 
 
 @pytest.fixture(scope="class")
-async def new_tab(request: SubRequest, chrome: Chrome) -> AsyncGenerator[Page, Any]:
+async def chrome_page(request: SubRequest, chrome: Chrome) -> AsyncGenerator[Page, Any]:
+    """Fixture to launch Google Chrome and receive a new page"""
+    cls = request.cls
     page = await chrome.newPage()
-    request.cls.tab = page
+    cls.page = page
+    if cls.preinject:
+        await page.evaluateOnNewDocument(cls.js, raw=True)
     yield page
+

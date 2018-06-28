@@ -1,10 +1,10 @@
 warc-file: "warcs/sopa-wikipedia-homepage.warc.gz"
 player_port: "8092"
 description: wikipedia sopa
-url: 'http://en.wikipedia.org/wiki/Main_Page'
+url: "http://en.wikipedia.org/wiki/Main_Page"
 time: 20120118143132
-javascript:
-  overlay: 'js/wikipedia/overlay.js'
+javascript: "js/wikipedia/overlay.js"
+tests:
+  - overlay
 chrome:
   exe: "google-chrome-beta"
-  appMode: TRUE

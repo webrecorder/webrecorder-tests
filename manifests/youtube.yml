@@ -3,8 +3,11 @@ player_port: "8090"
 description: Procrastination Polka (2015)
 url: 'https://www.youtube.com/watch?v=aT-Up5Y4uRI'
 time: 20170321044139
-javascript:
-  video_src: 'js/youtube/video_src.js'
-  video_duration: 'js/youtube/video_duration.js'
+javascript: 'js/youtube/index.js'
+tests:
+  - 'documentTitle'
+  - 'videoSrc'
+  - 'videoDuration'
+  - 'videoPlaying'
 chrome:
   exe: "google-chrome-beta"
