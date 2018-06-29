@@ -2,6 +2,7 @@
 
 QA tests for webrecorder player **(WORK IN PROGRESS)**
 
+## README Out Of Date
 ## installation
 
 required: python 3.6, selenium, chromedriver, google chrome (headless)

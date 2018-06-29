@@ -1,95 +1,63 @@
-import os
-import pty
-import subprocess
-import sys
-import time
-import signal
-import yaml
+from typing import Generator, AsyncGenerator, Any
+
 import pytest
-from selenium import webdriver
+import uvloop
+from _pytest.fixtures import SubRequest
+from _pytest.python import Metafunc, FunctionDefinition
+from simplechrome import Chrome, Page
+
+from test_setup.configurations import autowire_test, configure_test
+from test_setup.processes import launch_chrome, launch_wr_player
+from test_setup.util import has_parent
+
+
+def pytest_generate_tests(metafunc: Metafunc):
+    fndef: FunctionDefinition = metafunc.definition
+    if fndef.get_marker("autowired"):
+        autowire_test(metafunc)
 
 
 @pytest.fixture(scope="class")
-def load_manifest(request):
-    """
-    Load from yaml manifest all metadata of current test
-    class and make them available in self.conf
-    """
-    with open('manifest.yml', 'r') as m:
-        manifest = yaml.load(m)
-
-    conf = manifest['tests'][request.node.name]
-
-    if len(conf['recordings']) == 1:
-        player_url = 'http://localhost:{port}/local/collection/{time}/{url}'.format(
-            port=conf['player_port'], time=conf['recordings'][0]['time'], url=conf['recordings'][0]['url'])
-        conf['player_url'] = player_url
-    else:
-        conf['player_url'] = []
-        for recordings in conf['recordings']:
-            conf['player_url'].append('http://localhost:{port}/local/collection/{time}/{url}'.format(
-                port=conf['player_port'], time=recordings['time'], url=recordings['url']))
-
-    if request.cls is not None:
-        request.cls.conf = conf
-
-    yield conf
+def configured(request: SubRequest) -> None:
+    """Fixture to configure the test class with the manifest information"""
+    configure_test(request)
+    yield
 
 
 @pytest.fixture(scope="class")
-def player(request):
-    """
-    starts webrecorder-player with port and warc-file from self.conf
-    """
-    warc = os.path.join("warcs", request.cls.conf['warc-file'])
-    port = request.cls.conf['player_port']
-
-    primary, secondary = pty.openpty()
-
-    player_process = subprocess.Popen(
-        ["./bin/webrecorder-player", "--port", port, "--no-browser", warc],
-        stdout=secondary, stderr=secondary)
-
-    stdout = os.fdopen(primary)
-    while True:
-        out = stdout.readline()
-        if 'starting server on {port}'.format(port=port) in out.rstrip():
-            break
-
-    stdout.close()
-
-    if request.cls is not None:
-        request.cls.player = player_process
-
-    yield player_process
-
-    player_process.terminate()
-    # subprocess.run(["pkill", "webrecorder-player"])
+def wr_player(request: SubRequest) -> None:
+    """Fixture to launch webrecorder player"""
+    launch_wr_player(request)
+    yield
 
 
 @pytest.fixture(scope="class")
-def browser_driver(request):
-    """
-    starts a selenium driver to a local chrome headless
-    the driver is available from self.driver
-    TODO: implement logic to use SAUCELABS or remote selenium
-    """
-    try:
-        chrome = os.environ["CHROME"]
-    except KeyError:
-        print("set CHROME env to chrome path", file=sys.stderr)
-        sys.exit(1)
+def event_loop(request: SubRequest) -> Generator[uvloop.Loop, Any, None]:
+    loop = uvloop.new_event_loop()
+    if request.cls:
+        request.cls.loop = loop
+    yield loop
+    loop.close()
 
-    opts = webdriver.ChromeOptions()
-    opts.binary_location = chrome
-    opts.add_argument("headless")
-    opts.add_argument("disable-gpu")
-    driver = webdriver.Chrome(chrome_options=opts)
 
-    if request.cls is not None:
-        request.cls.driver = driver
+@pytest.fixture(scope="class")
+async def chrome(request: SubRequest) -> AsyncGenerator[Chrome, Any]:
+    """Fixture to launch Google Chrome"""
+    cls = request.cls
+    browser = await launch_chrome(cls)
+    if not has_parent(request, "new_tab"):
+        cls.chrome = browser
+    yield browser
+    await browser.close()
 
-    yield driver
 
-    driver.close()
-    driver.quit()
+@pytest.fixture(scope="class")
+async def chrome_page(request: SubRequest, chrome: Chrome) -> AsyncGenerator[Page, Any]:
+    """Fixture to launch Google Chrome and receive a new page"""
+    cls = request.cls
+    page = await chrome.newPage()
+    cls.page = page
+    if cls.preinject:
+        await page.evaluateOnNewDocument(cls.js, raw=True)
+    yield page
+

@@ -1,3 +1,10 @@
 pytest
-selenium
+pytest-asyncio
+psutil
+aiofiles
+aiohttp
+async-timeout
+grappa
 PyYAML
+uvloop
+git+ssh://git@github.com/webrecorder/simplechrome.git@master

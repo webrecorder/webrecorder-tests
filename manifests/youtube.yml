@@ -1,0 +1,13 @@
+warc-file: "warcs/yt-20170330012230.warc.gz"
+player_port: "8090"
+description: Procrastination Polka (2015)
+url: 'https://www.youtube.com/watch?v=aT-Up5Y4uRI'
+time: 20170321044139
+javascript: 'js/youtube/index.js'
+tests:
+  - 'documentTitle'
+  - 'videoSrc'
+  - 'videoDuration'
+  - 'videoPlaying'
+chrome:
+  exe: "google-chrome-beta"
