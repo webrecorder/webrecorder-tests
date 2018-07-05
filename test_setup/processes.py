@@ -1,14 +1,18 @@
 import os
 import pty
 import subprocess
+import time
 from subprocess import Popen
-from typing import Callable
+from typing import Callable, List
 
 import psutil
 from _pytest.fixtures import SubRequest
+from py._path.local import LocalPath
 from simplechrome import launch, Chrome
+from urllib.error import URLError
+from urllib.request import urlopen
 
-__all__ = ["launch_chrome", "launch_wr_player", "process_reaper"]
+__all__ = ["launch_chrome", "launch_wr_player", "process_reaper", "launch_pywb"]
 
 
 async def launch_chrome(cls: "WRTest") -> Chrome:
@@ -41,6 +45,42 @@ def launch_wr_player(request: SubRequest) -> None:
     stdout.close()
 
 
+def warc_glob(p: LocalPath) -> List[str]:
+    warcs = []
+    for w in p.listdir(fil=lambda x: ".warc" in str(x)):
+        warcs.append(str(w))
+    return warcs
+
+
+def launch_pywb(request: SubRequest) -> None:
+    """Fixture for launching pywb"""
+    rootdir = request.session.fspath
+    pywbt = rootdir / "pywb-tests"
+    coldir = pywbt / "collections"
+    if not coldir.exists():
+        warcs = warc_glob(rootdir / "warcs")
+        subprocess.run(["wb-manager", "init", "tests"], cwd=str(pywbt))
+        subprocess.run(["wb-manager", "add", "tests"] + warcs, cwd=str(pywbt))
+    # pywb does not like having its std[out,err] closed suddenly
+    proc = subprocess.Popen(
+        ["wayback"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        cwd=str(pywbt),
+    )
+    request.addfinalizer(process_reaper(proc))
+    for i in range(100):
+        time.sleep(0.1)
+        try:
+            with urlopen("http://localhost:8080") as f:
+                data = f.read().decode()
+            break
+        except URLError as e:
+            continue
+    else:
+        raise TimeoutError("Could not start server")
+
+
 def process_reaper(oproc: Popen) -> Callable[[], None]:
     """
     Returns a callable that, once called, will kill the supplied process
@@ -56,5 +96,3 @@ def process_reaper(oproc: Popen) -> Callable[[], None]:
         process.kill()
 
     return kill_it
-
-

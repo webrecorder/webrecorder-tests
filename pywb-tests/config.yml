@@ -1,0 +1,15 @@
+# pywb config file
+# ========================================
+#
+
+collections:
+    all: $all
+
+# Settings for each collection
+use_js_obj_proxy: true
+
+# Memento support, enable
+enable_memento: true
+
+# Replay content in an iframe
+framed_replay: true

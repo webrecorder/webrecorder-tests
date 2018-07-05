@@ -1,7 +1,9 @@
-import pytest
-from .wrtest import WRAutoTest
+from .wrtest import PywbTest, WRPlayerTest
 
 
-@pytest.mark.usefixtures("wr_player", "chrome_page")
-class TestWikipediaSopa(WRAutoTest):
+class TestWikipediaSopa(WRPlayerTest):
+    manifest = "manifests/wikisopa.yml"
+
+
+class TestWikipediaSopaPywb(PywbTest):
     manifest = "manifests/wikisopa.yml"

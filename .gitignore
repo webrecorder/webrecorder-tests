@@ -165,3 +165,7 @@ fabric.properties
 *.iml
 out
 gen
+
+collections
+templates
+static

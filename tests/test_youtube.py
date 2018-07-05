@@ -1,7 +1,9 @@
-import pytest
-from .wrtest import WRAutoTest
+from .wrtest import WRPlayerTest, PywbTest
 
 
-@pytest.mark.usefixtures("wr_player", "chrome_page")
-class TestYouTube(WRAutoTest):
+class TestYouTubePlayer(WRPlayerTest):
+    manifest = "manifests/youtube.yml"
+
+
+class TestYouTubePYWB(PywbTest):
     manifest = "manifests/youtube.yml"

@@ -1,5 +1,5 @@
-sudo: required
-
+dist: trusty
+sudo: false
 language: python
 python:
   - "3.6"
@@ -10,21 +10,13 @@ branches:
   - develop
 
 addons:
-  chrome: stable
-
-env:
-  - CHROME="/usr/bin/google-chrome-stable"
-
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt install libgconf-2-4
-  - wget -nc -O - https://chromedriver.storage.googleapis.com/2.31/chromedriver_linux64.zip | gunzip - > /tmp/chromedriver
-  - chmod +x /tmp/chromedriver
-  - sudo mv /tmp/chromedriver /usr/local/bin/chromedriver
+  apt:
+    packages:
+      # This is required to run new chrome on old trusty
+      - libnss3
 
 install:
   - ./bootstrap.sh
   - pip install -r requirements.txt
 
-script: 
-  - pytest -v -s
+script: ./run-tests.sh

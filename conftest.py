@@ -7,7 +7,7 @@ from _pytest.python import Metafunc, FunctionDefinition
 from simplechrome import Chrome, Page
 
 from test_setup.configurations import autowire_test, configure_test
-from test_setup.processes import launch_chrome, launch_wr_player
+from test_setup.processes import launch_chrome, launch_wr_player, launch_pywb
 from test_setup.util import has_parent
 
 
@@ -28,6 +28,13 @@ def configured(request: SubRequest) -> None:
 def wr_player(request: SubRequest) -> None:
     """Fixture to launch webrecorder player"""
     launch_wr_player(request)
+    yield
+
+
+@pytest.fixture(scope="class")
+def pywb(request: SubRequest) -> None:
+    """Fixture to launch pywb"""
+    launch_pywb(request)
     yield
 
 
@@ -60,4 +67,3 @@ async def chrome_page(request: SubRequest, chrome: Chrome) -> AsyncGenerator[Pag
     if cls.preinject:
         await page.evaluateOnNewDocument(cls.js, raw=True)
     yield page
-
