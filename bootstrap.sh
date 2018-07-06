@@ -23,9 +23,8 @@ download_player() {
 }
 
 download_warcs() {
-	warcs=$(awk '/warc-file/ {print $2}' manifest.yml)
-
-	for warc in $warcs; do
+    warcs=$(find manifests/ -name \*.yml -exec awk 'match($0,/warc-file:\s"warcs\/([^"]+)"/, arr) {print arr[1]}' {} \;)
+    for warc in ${warcs}; do
 		if [ ! -f "./warcs/$warc" ]; then
 			printf "\e[31m WARC NOT FOUND \e[39m%s\n" "$warc"
 			wget -P ./warcs "$s3/tests/$warc"
