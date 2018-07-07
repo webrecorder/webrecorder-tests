@@ -9,5 +9,3 @@ tests:
   - 'videoSrc'
   - 'videoDuration'
   - 'videoPlaying'
-chrome:
-  chromium_revision: "571375"

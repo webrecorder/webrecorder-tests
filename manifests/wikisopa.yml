@@ -5,5 +5,3 @@ time: 20120118143132
 javascript: "js/wikipedia/overlay.js"
 tests:
   - overlay
-chrome:
-  chromium_revision: "571375"

@@ -26,6 +26,10 @@ async def launch_chrome(cls: "WRTest") -> Chrome:
     if opts is not None:
         if opts.get("exe"):
             opts["executablePath"] = opts.get("exe")
+    else:
+        opts = dict()
+    if os.getenv("INTRAVIS", None) is not None:
+        opts["headless"] = False
     return await launch(options=opts)
 
 
