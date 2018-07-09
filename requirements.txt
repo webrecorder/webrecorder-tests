@@ -8,4 +8,3 @@ grappa
 PyYAML
 uvloop
 git+https://github.com/webrecorder/simplechrome.git
-git+https://github.com/webrecorder/pywb.git@develop

@@ -8,6 +8,15 @@ from simplechrome import Frame
 
 __all__ = ["WRTest", "WRAutoTest", "PywbTest", "WRPlayerTest"]
 
+try:
+    import pywb
+
+    HAVE_PYWB = True
+except ImportError:
+    HAVE_PYWB = False
+
+PYWB_SKIP_REASON = "Pywb is not installed. To test using pywb, please execute 'pip install -r test-requirements.txt'"
+
 WAITS = namedtuple("WAITS", ["load", "dom_load", "net_idle", "net_almost_idle"])
 
 
@@ -71,6 +80,7 @@ class WRAutoTest(WRTest):
         results | self.should.be.true
 
 
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
 @pytest.mark.pywbtest
 @pytest.mark.usefixtures("pywb", "chrome_page")
 class PywbTest(WRAutoTest):
