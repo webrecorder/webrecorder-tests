@@ -1,9 +1,12 @@
-from _pytest.fixtures import SubRequest
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from _pytest.fixtures import SubRequest
 
 __all__ = ["has_parent"]
 
 
-def has_parent(request: SubRequest, parent_name: str) -> bool:
+def has_parent(request: "SubRequest", parent_name: str) -> bool:
     """
     Checks if the request has a named parent request
 

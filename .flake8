@@ -1,0 +1,6 @@
+[flake8]
+exclude = .git, .github, .pytest_cache, bin, js, manifests, pywb-tests, .venv, warcs, __pycache__, old, build, dist
+ignore = E203, E266, E501, W503
+max-line-length = 80
+max-complexity = 18
+select = B,C,E,F,W,T4,B9

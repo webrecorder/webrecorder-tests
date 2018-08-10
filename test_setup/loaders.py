@@ -1,15 +1,19 @@
+from typing import List, Dict, TYPE_CHECKING, Union
 from pathlib import Path
-from typing import Union, Dict, List
 
 import yaml
-from py._path.local import LocalPath
 
-__all__ = ["load_file", "load_javascript", "load_manifest"]
-
-LoadJS = Union[Dict[str, str], List[str], str]
+if TYPE_CHECKING:
+    from py._path.local import LocalPath
 
 
-def load_file(p: Union[LocalPath, Path]) -> str:
+__all__ = ["load_file", "load_javascript", "load_manifest", "ConfigT"]
+
+ChromeOptsT = Dict[str, str]
+ConfigT = Dict[str, Union[str, List[str], ChromeOptsT]]
+
+
+def load_file(p: Union["LocalPath", Path]) -> str:
     """
     Load a file from disk
 
@@ -20,7 +24,7 @@ def load_file(p: Union[LocalPath, Path]) -> str:
         return iin.read()
 
 
-def load_manifest(p: Union[LocalPath, Path]) -> dict:
+def load_manifest(p: Union["LocalPath", Path]) -> ConfigT:
     """
     Loads a tests manifest (yml)
 
@@ -30,7 +34,9 @@ def load_manifest(p: Union[LocalPath, Path]) -> dict:
     return yaml.load(load_file(p))
 
 
-def load_javascript(rootp: Union[LocalPath, Path], load: LoadJS) -> LoadJS:
+def load_javascript(
+    rootp: Union["LocalPath", Path], load: str
+) -> Union[Dict[str, str], List[str], str]:
     """
     Loads the javascript files specified in a test manifest
 
@@ -39,13 +45,13 @@ def load_javascript(rootp: Union[LocalPath, Path], load: LoadJS) -> LoadJS:
     :return: The loaded javascript
     """
     if isinstance(load, dict):
-        js = dict()
+        js_dict: Dict[str, str] = dict()
         for k, v in load.items():
-            js[k] = load_file(rootp / v)
+            js_dict[k] = load_file(rootp / v)
+        return js_dict
     elif isinstance(load, list):
-        js = list()
+        js_list: List[str] = list()
         for p in load:
-            js.append(load_file(rootp / p))
-    else:
-        js = load_file(rootp / load)
-    return js
+            js_list.append(load_file(rootp / p))
+        return js_list
+    return load_file(rootp / load)

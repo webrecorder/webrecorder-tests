@@ -3,19 +3,31 @@ import pty
 import subprocess
 import time
 from subprocess import Popen
-from typing import Callable, List
-
-import psutil
-from _pytest.fixtures import SubRequest
-from py._path.local import LocalPath
-from simplechrome import launch, Chrome
+from typing import Callable, List, TYPE_CHECKING
 from urllib.error import URLError
 from urllib.request import urlopen
 
-__all__ = ["launch_chrome", "launch_wr_player", "process_reaper", "launch_pywb"]
+import psutil
+from simplechrome import launch, Chrome
+
+from .constants import CHROME_EXE, OPERA_EXE
+
+if TYPE_CHECKING:
+    from _pytest.fixtures import SubRequest
+    from py._path.local import LocalPath
+    from test_setup.wrtest import WRTest
+
+__all__ = [
+    "launch_chrome",
+    "launch_chromium",
+    "launch_opera",
+    "launch_wr_player",
+    "process_reaper",
+    "launch_pywb",
+]
 
 
-async def launch_chrome(cls: "WRTest") -> Chrome:
+async def launch_chromium(cls: "WRTest") -> Chrome:
     """
     Launches an instance of the chrome browser.
     If the supplied options exist, the supplied options will be applied before launch.
@@ -33,7 +45,51 @@ async def launch_chrome(cls: "WRTest") -> Chrome:
     return await launch(options=opts)
 
 
-def launch_wr_player(request: SubRequest) -> None:
+async def launch_chrome(cls: "WRTest") -> Chrome:
+    """
+    Launches an instance of the chrome browser.
+    If the supplied options exist, the supplied options will be applied before launch.
+
+    :return: Chrome browser object
+    """
+    opts = getattr(cls, "chrome_opts", None)
+    if opts is not None:
+        if opts.get("exe"):
+            opts["executablePath"] = opts.get("exe")
+        else:
+            opts["executablePath"] = CHROME_EXE
+    else:
+        opts = dict()
+        opts["executablePath"] = CHROME_EXE
+
+    if os.getenv("INTRAVIS", None) is not None:
+        opts["headless"] = False
+    return await launch(options=opts)
+
+
+async def launch_opera(cls: "WRTest") -> Chrome:
+    """
+    Launches an instance of the chrome browser.
+    If the supplied options exist, the supplied options will be applied before launch.
+
+    :return: Chrome browser object
+    """
+    opts = getattr(cls, "chrome_opts", None)
+    if opts is not None:
+        if opts.get("exe"):
+            opts["executablePath"] = opts.get("exe")
+        else:
+            opts["executablePath"] = OPERA_EXE
+    else:
+        opts = dict()
+        opts["executablePath"] = OPERA_EXE
+
+    if os.getenv("INTRAVIS", None) is not None:
+        opts["headless"] = False
+    return await launch(options=opts)
+
+
+def launch_wr_player(request: "SubRequest") -> None:
     """Launches an instance of webrecorder player"""
     exe, port, warcp = request.cls.player
     primary, secondary = pty.openpty()
@@ -49,14 +105,15 @@ def launch_wr_player(request: SubRequest) -> None:
     stdout.close()
 
 
-def warc_glob(p: LocalPath) -> List[str]:
+def warc_glob(p: "LocalPath") -> List[str]:
+    """receive a list containing the the full paths of the test warcs """
     warcs = []
     for w in p.listdir(fil=lambda x: ".warc" in str(x)):
         warcs.append(str(w))
     return warcs
 
 
-def launch_pywb(request: SubRequest) -> None:
+def launch_pywb(request: "SubRequest") -> None:
     """Fixture for launching pywb"""
     rootdir = request.session.fspath
     pywbt = rootdir / "pywb-tests"

@@ -34,9 +34,31 @@ download_warcs() {
 	done
 }
 
+download_geckodriver() {
+    case $(uname -s) in
+		"Linux")
+			dlurl="https://github.com/mozilla/geckodriver/releases/download/v0.21.0/geckodriver-v0.21.0-linux64.tar.gz"
+			;;
+		"Darwin")
+			dlurl="https://github.com/mozilla/geckodriver/releases/download/v0.21.0/geckodriver-v0.21.0-macos.tar.gz"
+			;;
+	esac
+
+	if [ ! -f "./bin/geckodriverr" ]; then
+	    printf "\e[31m GEKODRIVER NOT FOUND \e[39m\n"
+	    wget -O bin/gekodriver.tar.gz "${dlurl}"
+	    tar xvzf ./bin/gekodriver.tar.gz -C ./bin/
+	    rm ./bin/gekodriver.tar.gz
+	else
+	    printf "\e[32m GEKODRIVER FOUND \e[39m\n"
+	fi
+}
+
 main() {
 	download_player
 	download_warcs
+	download_geckodriver
 }
+
 
 main

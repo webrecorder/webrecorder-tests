@@ -16,7 +16,7 @@ function videoPlaying() {
   const video = document.getElementsByTagName('video')[0];
   return Promise.race([
     new Promise(resolve => {
-      setTimeout(() => resolve(false), 5000);
+      setTimeout(() => resolve(false), 10000);
       video.onplaying = function() {
         resolve(true);
       };

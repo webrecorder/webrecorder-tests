@@ -8,3 +8,8 @@ grappa
 PyYAML
 uvloop
 git+https://github.com/webrecorder/simplechrome.git
+attrs
+black
+sauceclient
+selenium
+Jinja2
