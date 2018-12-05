@@ -1,6 +1,6 @@
 """Module containing test setup methods"""
-
-from typing import List, TYPE_CHECKING, Dict
+from pathlib import Path
+from typing import List, TYPE_CHECKING, Dict, Union
 
 from .loaders import load_manifest, load_file
 
@@ -24,12 +24,14 @@ def setup_url(fixturenames: List[str], config: Dict) -> str:
 
 
 def _default_test_setup(
-    root: "LocalPath", fixturenames: List[str], config: Dict, cls: "WRTest"
+    root: Union["LocalPath", Path], fixturenames: List[str], config: Dict, cls: "WRTest"
 ) -> None:
     cls.player = (str(root / "bin/webrecorder-player"), "8092", config.get("warc-file"))
     _js = config.get("javascript")
     if _js:
-        cls.js = load_file(root / _js)
+        cls.js = (
+            f"{load_file(root / 'test_setup' /'testUtil.js')}\n{load_file(root / _js)}"
+        )
     cls.url = setup_url(fixturenames, config)
     cls.chrome_opts = config.get("chrome")
 

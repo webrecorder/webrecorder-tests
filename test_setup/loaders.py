@@ -1,7 +1,7 @@
 from typing import List, Dict, TYPE_CHECKING, Union
 from pathlib import Path
 
-import yaml
+from ruamel.yaml import YAML
 
 if TYPE_CHECKING:
     from py._path.local import LocalPath
@@ -13,14 +13,15 @@ ChromeOptsT = Dict[str, str]
 ConfigT = Dict[str, Union[str, List[str], ChromeOptsT]]
 
 
-def load_file(p: Union["LocalPath", Path]) -> str:
+def load_file(p: Union["LocalPath", Path, str]) -> str:
     """
     Load a file from disk
 
     :param p: The path object representing the file
     :return: The contents of the files
     """
-    with p.open("r") as iin:
+    fp = p if not isinstance(p, str) else Path(p)
+    with fp.open("r") as iin:
         return iin.read()
 
 
@@ -31,7 +32,8 @@ def load_manifest(p: Union["LocalPath", Path]) -> ConfigT:
     :param p: The path object representing the manifest
     :return: The contents of the manifest
     """
-    return yaml.load(load_file(p))
+    with p.open("r") as yamlIn:
+        return YAML().load(yamlIn.read())
 
 
 def load_javascript(
@@ -44,14 +46,15 @@ def load_javascript(
     :param load: The javascript definition found in a test manifest manifests
     :return: The loaded javascript
     """
+    tutil = load_file(Path("testUtils.js"))
     if isinstance(load, dict):
         js_dict: Dict[str, str] = dict()
         for k, v in load.items():
-            js_dict[k] = load_file(rootp / v)
+            js_dict[k] = f"{tutil}\n{load_file(rootp / v)}"
         return js_dict
     elif isinstance(load, list):
         js_list: List[str] = list()
         for p in load:
-            js_list.append(load_file(rootp / p))
+            js_list.append(f"{tutil}\n{load_file(rootp / p)}")
         return js_list
-    return load_file(rootp / load)
+    return f"{tutil}\n{load_file(rootp / load)}"

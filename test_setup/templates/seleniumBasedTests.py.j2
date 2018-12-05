@@ -1,0 +1,125 @@
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
+@pytest.mark.skipif(FIREFOX_EXE is None, reason="FireFox Is Not Installed")
+@pytest.mark.pywbtest
+@pytest.mark.firefoxtest
+@pytest.mark.usefixtures("pywb", "firefox_driver")
+class TestPywbFireFox(BaseWRSeleniumTest):
+    test_type = "firefox"
+    url = PYWB_URL
+    js = TEST_JS
+
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    def test_all(self, test_name: str) -> None:
+        self.goto_test()
+        to_inject = f"""{self.js}\n\n
+        $TU.runTestFNForSelenium({test_name}, arguments[arguments.length - 1]);
+        """
+        assert self.driver.execute_async_script(to_inject)
+
+
+@pytest.mark.skipif(FIREFOX_EXE is None, reason="FireFox Is Not Installed")
+@pytest.mark.wrplayertest
+@pytest.mark.firefoxtest
+@pytest.mark.usefixtures("wr_player", "firefox_driver")
+class TestWRPlayerFireFox(BaseWRSeleniumTest):
+    test_type = "firefox"
+    url = PLAYER_URL
+    player = PLAYER_INFO
+    js = TEST_JS
+
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    def test_all(self, test_name: str) -> None:
+        self.goto_test()
+        to_inject = f"""{self.js}\n\n
+        $TU.runTestFNForSelenium({test_name}, arguments[arguments.length - 1]);
+        """
+        assert self.driver.execute_async_script(to_inject)
+
+
+@pytest.mark.skipif(
+    TRAVIS_TUNNEL_ID is None and SAFARI_EXE is None,
+    reason="Safari Testing On Non-OSX Machines Requires Travis",
+)
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
+@pytest.mark.pywbtest
+@pytest.mark.safaritest
+@pytest.mark.usefixtures("pywb", "safari_driver")
+class TestPywbSafari(BaseWRSeleniumTest):
+    test_type = "safari-sauce" if TRAVIS_TUNNEL_ID is not None else "safari-local"
+    url = PYWB_URL
+    js = TEST_JS
+
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    def test_all(self, test_name: str) -> None:
+        self.goto_test()
+        to_inject = f"""{self.js}\n\n
+        $TU.runTestFNForSelenium({test_name}, arguments[arguments.length - 1]);
+        """
+        assert self.driver.execute_async_script(to_inject)
+
+
+@pytest.mark.skipif(
+    TRAVIS_TUNNEL_ID is None and SAFARI_EXE is None,
+    reason="Safari Testing On Non-OSX Machines Requires Travis",
+)
+@pytest.mark.wrplayertest
+@pytest.mark.safaritest
+@pytest.mark.usefixtures("wr_player", "safari_driver")
+class TestWRPlayerSafari(BaseWRSeleniumTest):
+    test_type = "safari-sauce" if TRAVIS_TUNNEL_ID is not None else "safari-local"
+    url = PLAYER_URL
+    player = PLAYER_INFO
+    js = TEST_JS
+
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    def test_all(self, test_name: str) -> None:
+        self.goto_test()
+        to_inject = f"""{self.js}\n\n
+        $TU.runTestFNForSelenium({test_name}, arguments[arguments.length - 1]);
+        """
+        assert self.driver.execute_async_script(to_inject)
+
+
+@pytest.mark.skipif(
+    TRAVIS_TUNNEL_ID is None and EDGE_EXE is None,
+    reason="Edge Testing On Non-Windows Machines Requires Travis",
+)
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
+@pytest.mark.pywbtest
+@pytest.mark.edgetest
+@pytest.mark.usefixtures("pywb", "edge_driver")
+class TestPywbEdge(BaseWRSeleniumTest):
+    test_type = "edge-sauce" if TRAVIS_TUNNEL_ID is not None else "edge-local"
+    url = PYWB_URL
+    js = TEST_JS
+
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    def test_all(self, test_name: str) -> None:
+        self.goto_test()
+        to_inject = f"""{self.js}\n\n
+        $TU.runTestFNForSelenium({test_name}, arguments[arguments.length - 1]);
+        """
+        assert self.driver.execute_async_script(to_inject)
+
+
+@pytest.mark.skipif(
+    TRAVIS_TUNNEL_ID is None and EDGE_EXE is None,
+    reason="Edge Testing On Non-Windows Machines Requires Travis",
+)
+@pytest.mark.wrplayertest
+@pytest.mark.edgetest
+@pytest.mark.usefixtures("wr_player", "edge_driver")
+class TestWRPlayerEdge(BaseWRSeleniumTest):
+    test_type = "edge-sauce" if TRAVIS_TUNNEL_ID is not None else "edge-local"
+    url = PLAYER_URL
+    player = PLAYER_INFO
+    js = TEST_JS
+
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    def test_all(self, test_name: str) -> None:
+        self.goto_test()
+        to_inject = f"""{self.js}\n\n
+        $TU.runTestFNForSelenium({test_name}, arguments[arguments.length - 1]);
+        """
+        assert self.driver.execute_async_script(to_inject)
+

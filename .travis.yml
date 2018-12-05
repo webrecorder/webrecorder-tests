@@ -13,8 +13,7 @@ addons:
   chrome: stable
   firefox: latest
   sauce_connect:
-    username: $SAUCE_USERNAME
-    access_key: $SAUCE_ACCESS_KEY
+    sauce_connect: true
   apt:
     packages:
       # This is required to run new chrome on old trusty

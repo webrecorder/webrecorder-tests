@@ -44,7 +44,7 @@ download_geckodriver() {
 			;;
 	esac
 
-	if [ ! -f "./bin/geckodriverr" ]; then
+	if [ ! -f "./bin/geckodriver" ]; then
 	    printf "\e[31m GEKODRIVER NOT FOUND \e[39m\n"
 	    wget -O bin/gekodriver.tar.gz "${dlurl}"
 	    tar xvzf ./bin/gekodriver.tar.gz -C ./bin/

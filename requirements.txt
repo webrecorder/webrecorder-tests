@@ -5,11 +5,12 @@ aiofiles
 aiohttp
 async-timeout
 grappa
-PyYAML
+ruamel.yaml
 uvloop
-git+https://github.com/webrecorder/simplechrome.git
 attrs
 black
 sauceclient
 selenium
 Jinja2
+git+https://github.com/webrecorder/chrome-remote-interface-py.git#egg=cripy
+git+https://github.com/webrecorder/simplechrome.git#egg=simplechrome

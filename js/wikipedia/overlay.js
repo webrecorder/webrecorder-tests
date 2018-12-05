@@ -1,17 +1,5 @@
-function overlay () {
-  function waitForIt() {
-    return new Promise(resolve => {
-      function raf() {
-        const elem = document.querySelector('#mw-sopaOverlay');
-        if (elem) {
-          return resolve(elem);
-        } else {
-          window.requestAnimationFrame(raf);
-        }
-      }
-      window.requestAnimationFrame(raf);
-    });
-  }
-  return waitForIt()
-    .then(overlay => overlay.innerText.startsWith('Imagine a World'));
+async function overlay () {
+  await $TU.waitForElement('#mw-sopaOverlay');
+  const text = $TU.elemText('#mw-sopaOverlay');
+  return text != null ? text.startsWith('Imagine a World') : false
 }

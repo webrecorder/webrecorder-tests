@@ -1,0 +1,163 @@
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
+@pytest.mark.skipif(OPERA_EXE is None, reason="Opera Is Not Installed")
+@pytest.mark.pywbtest
+@pytest.mark.operatest
+@pytest.mark.usefixtures("pywb", "opera_page")
+class TestPywbOpera(BaseSimpleChromeTest):
+    test_type = "opera"
+    {% if chromeopts %}chrome_opts = CHROME_OPTS{% endif -%}
+    url = PYWB_URL
+    js = TEST_JS
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    async def test_all(self, test_name: str) -> None:
+        """Default test method, called once per each test listed in the manifest"""
+        replay_frame = await self.goto_test(self.waits.net_idle)
+        try:
+            async with timeout(self.test_to):
+                results = await replay_frame.evaluate(f"{test_name}()")
+        except TimeoutError:
+            raise WRAutoTestTimeOut(
+                f"{test_name} did not resolve within {self.test_to} seconds"
+            )
+        await self.page.stopLoading()
+        assert results
+
+
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
+@pytest.mark.pywbtest
+@pytest.mark.chromiumtest
+@pytest.mark.usefixtures("pywb", "chromium_page")
+class TestPywbChromium(BaseSimpleChromeTest):
+    test_type = "chromium"
+    {% if chromeopts %}chrome_opts = CHROME_OPTS{% endif -%}
+    url = PYWB_URL
+    js = TEST_JS
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    async def test_all(self, test_name: str) -> None:
+        """Default test method, called once per each test listed in the manifest"""
+        replay_frame = await self.goto_test(self.waits.net_idle)
+        try:
+            async with timeout(self.test_to):
+                results = await replay_frame.evaluate(f"{test_name}()")
+        except TimeoutError:
+            raise WRAutoTestTimeOut(
+                f"{test_name} did not resolve within {self.test_to} seconds"
+            )
+        await self.page.stopLoading()
+        assert results
+
+
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
+@pytest.mark.skipif(CHROME_EXE is None, reason="Chrome Is Not Installed")
+@pytest.mark.pywbtest
+@pytest.mark.chrometest
+@pytest.mark.usefixtures("pywb", "chrome_page")
+class TestPywbChrome(BaseSimpleChromeTest):
+    test_type = "chrome"
+    {% if chromeopts %}chrome_opts = CHROME_OPTS{% endif -%}
+    url = PYWB_URL
+    js = TEST_JS
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    async def test_all(self, test_name: str) -> None:
+        """Default test method, called once per each test listed in the manifest"""
+        replay_frame = await self.goto_test(self.waits.net_idle)
+        try:
+            async with timeout(self.test_to):
+                results = await replay_frame.evaluate(f"{test_name}()")
+        except TimeoutError:
+            raise WRAutoTestTimeOut(
+                f"{test_name} did not resolve within {self.test_to} seconds"
+            )
+        await self.page.stopLoading()
+        assert results
+
+
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
+@pytest.mark.skipif(OPERA_EXE is None, reason="Opera Is Not Installed")
+@pytest.mark.wrplayertest
+@pytest.mark.operatest
+@pytest.mark.usefixtures("wr_player", "opera_page")
+class TestWRPlayerOpera(BaseSimpleChromeTest):
+    test_type = "opera"
+    {% if chromeopts %}chrome_opts = CHROME_OPTS{% endif -%}
+    url = PLAYER_URL
+    player = PLAYER_INFO
+    js = TEST_JS
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    async def test_all(self, test_name: str) -> None:
+        """Default test method, called once per each test listed in the manifest"""
+        replay_frame = await self.goto_test(self.waits.net_idle)
+        try:
+            async with timeout(self.test_to):
+                results = await replay_frame.evaluate(f"{test_name}()")
+        except TimeoutError:
+            raise WRAutoTestTimeOut(
+                f"{test_name} did not complete within {self.test_to} seconds"
+            )
+        await self.page.stopLoading()
+        assert results
+
+
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
+@pytest.mark.wrplayertest
+@pytest.mark.chromiumtest
+@pytest.mark.usefixtures("wr_player", "chromium_page")
+class TestWRPlayerChromium(BaseSimpleChromeTest):
+    test_type = "chromium"
+    {% if chromeopts %}chrome_opts = CHROME_OPTS{% endif -%}
+    url = PLAYER_URL
+    player = PLAYER_INFO
+    js = TEST_JS
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    async def test_all(self, test_name: str) -> None:
+        """Default test method, called once per each test listed in the manifest"""
+        replay_frame = await self.goto_test(self.waits.net_idle)
+        try:
+            async with timeout(self.test_to):
+                results = await replay_frame.evaluate(f"{test_name}()")
+        except TimeoutError:
+            raise WRAutoTestTimeOut(
+                f"{test_name} did not complete within {self.test_to} seconds"
+            )
+        await self.page.stopLoading()
+        assert results
+
+
+@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
+@pytest.mark.skipif(CHROME_EXE is None, reason="Chrome Is Not Installed")
+@pytest.mark.wrplayertest
+@pytest.mark.chrometest
+@pytest.mark.usefixtures("wr_player", "chrome_page")
+class TestWRPlayerChrome(BaseSimpleChromeTest):
+    test_type = "chrome"
+    {% if chromeopts %}chrome_opts = CHROME_OPTS{% endif -%}
+    url = PLAYER_URL
+    player = PLAYER_INFO
+    js = TEST_JS
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("test_name", TEST_LIST)
+    async def test_all(self, test_name: str) -> None:
+        """Default test method, called once per each test listed in the manifest"""
+        replay_frame = await self.goto_test(self.waits.net_idle)
+        try:
+            async with timeout(self.test_to):
+                results = await replay_frame.evaluate(f"{test_name}()")
+        except TimeoutError:
+            raise WRAutoTestTimeOut(
+                f"{test_name} did not complete within {self.test_to} seconds"
+            )
+        await self.page.stopLoading()
+        assert results
+
+

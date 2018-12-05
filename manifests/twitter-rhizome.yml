@@ -1,0 +1,9 @@
+warc-file: "warcs/rhizomeTwitter-20180816174113.warc.gz"
+description: twitter-rhizome pages
+url: "https://twitter.com/rhizome"
+time: 20180816174113
+javascript: "js/twitter-rhizome/index.js"
+tests:
+  - expandThread
+  - scrollTimelinePlayVideo
+

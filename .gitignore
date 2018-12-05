@@ -166,6 +166,6 @@ fabric.properties
 out
 gen
 
-collections
-templates
-static
+pywb-tests/collections
+pywb-tests/templates
+pywb-tests/static

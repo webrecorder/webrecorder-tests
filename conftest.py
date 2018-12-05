@@ -1,18 +1,17 @@
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
+import os
 import pytest
 import uvloop
-from jinja2 import Template
 from selenium.webdriver import Firefox, Safari, Edge, FirefoxProfile
 from selenium.webdriver import Remote
-from selenium.webdriver.remote.remote_connection import RemoteConnection
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+from selenium.webdriver.remote.remote_connection import RemoteConnection
 from simplechrome import Chrome, Page
 
-from test_setup.configurations import configure_test, autowire_test
 from test_setup.constants import FIREFOX_EXE, SAUCE_HUB_URL, SAUCE_SAFARI, SAUCE_EDGE
+from test_setup.generate_tests import gen
 from test_setup.processes import (
     launch_chrome,
     launch_chromium,
@@ -20,18 +19,14 @@ from test_setup.processes import (
     launch_wr_player,
     launch_pywb,
 )
-from test_setup.services import ALL_TESTS
 from test_setup.util import has_parent
 
 if TYPE_CHECKING:
     from _pytest.fixtures import SubRequest
-    from _pytest.python import Metafunc, FunctionDefinition
     from _pytest.config import Config
 
 
 __all__ = [
-    "pytest_generate_tests",
-    "configured",
     "wr_player",
     "pywb",
     "opera",
@@ -51,33 +46,7 @@ def pytest_configure(config: "Config") -> None:
     if os.getenv("NOGEN", None) is not None:
         print("no gen")
         return
-    test_dir = Path("tests")
-    tt_path = Path("test_setup") / "test_template.py.j2"
-    manifests_path = Path("manifests")
-    with tt_path.open("r") as tin:
-        test_template = Template(tin.read(), keep_trailing_newline=True)
-    for manifest in manifests_path.glob("*.yml"):
-        clean_steam = manifest.stem.strip()
-        with (test_dir / f"test_{clean_steam}.py").open("w") as out:
-            out.write(
-                test_template.render(
-                    ALL_TESTS=ALL_TESTS, dsc=clean_steam.upper(), mnfest=str(manifest)
-                )
-            )
-
-
-def pytest_generate_tests(metafunc: "Metafunc") -> None:
-    """Perform test function setup and parametrization"""
-    fndef: "FunctionDefinition" = metafunc.definition
-    if fndef.get_marker("autowired"):
-        autowire_test(metafunc)
-
-
-@pytest.fixture(scope="class")
-def configured(request: "SubRequest") -> None:
-    """Fixture to configure the test class with the manifest information"""
-    configure_test(request)
-    yield
+    gen(Path(config.rootdir))
 
 
 @pytest.fixture(scope="class")
