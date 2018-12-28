@@ -1,8 +1,8 @@
 import os
-from shutil import which
-from typing import Dict, Optional, List, Union
 
 import attr
+from shutil import which
+from typing import Dict, Optional, List, Union
 
 __all__ = [
     "Waits",
@@ -18,6 +18,8 @@ __all__ = [
     "SAUCE_SAFARI",
     "HAVE_PYWB",
     "PYWB_SKIP_REASON",
+    "USE_SAUCE",
+    "SAUCE_SKIP_REASON",
 ]
 
 
@@ -51,14 +53,14 @@ def find_firefox() -> Optional[str]:
     return None
 
 
-@attr.dataclass(slots=True, frozen=True)
+@attr.dataclass(frozen=True)
 class Waits(object):
     """Immutable class holding the waits used in simple chrome"""
 
     load: Dict[str, str] = attr.ib(default=dict(waitUntil="load"))
     dom_load: Dict[str, str] = attr.ib(default=dict(waitUntil="documentloaded"))
     net_idle: Dict[str, str] = attr.ib(default=dict(waitUntil="networkidle0"))
-    net_almost_idle: Dict[str, str] = attr.ib(default=dict(waitUntil="networkidle1"))
+    net_almost_idle: Dict[str, str] = attr.ib(default=dict(waitUntil="networkidle2"))
 
 
 WAITS = Waits()
@@ -125,3 +127,8 @@ except ImportError:
     HAVE_PYWB = False
 
 PYWB_SKIP_REASON = "Pywb is not installed. To test using pywb, please execute 'pip install -r test-requirements.txt'"
+
+USE_SAUCE = bool(os.getenv("USE_SAUCE", False))
+
+SAUCE_SKIP_REASON = 'The environment key "USE_SAUCE" was not defined'
+

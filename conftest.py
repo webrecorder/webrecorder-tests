@@ -20,6 +20,7 @@ from test_setup.processes import (
     launch_pywb,
 )
 from test_setup.util import has_parent
+from test_setup.configurations import set_selenium_driver_timeouts
 
 if TYPE_CHECKING:
     from _pytest.fixtures import SubRequest
@@ -155,6 +156,7 @@ def firefox_driver(request: "SubRequest") -> Firefox:
         capabilities=dict(marionette=True, acceptInsecureCerts=True),
         firefox_profile=ffp,
     )
+    set_selenium_driver_timeouts(driver)
     request.cls.driver = driver
     yield driver
     driver.close()
@@ -169,6 +171,7 @@ def safari_driver(request: "SubRequest") -> Union[Remote, Safari]:
         executor = RemoteConnection(SAUCE_HUB_URL, resolve_ip=False)
         driver = Remote(desired_capabilities=SAUCE_SAFARI, command_executor=executor)
 
+    set_selenium_driver_timeouts(driver)
     request.cls.driver = driver
     yield driver
     driver.close()
@@ -182,6 +185,7 @@ def edge_driver(request: "SubRequest") -> Union[Remote, Edge]:
     else:
         executor = RemoteConnection(SAUCE_HUB_URL, resolve_ip=False)
         driver = Remote(desired_capabilities=SAUCE_EDGE, command_executor=executor)
+    set_selenium_driver_timeouts(driver)
     request.cls.driver = driver
     yield driver
     driver.close()

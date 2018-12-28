@@ -6,7 +6,7 @@ from jinja2 import Template
 
 from .loaders import load_manifest
 
-__all__ = ["gen"]
+__all__ = ["gen", "load_test_setup_str", "load_test_js_str", "load_template"]
 
 
 def load_test_setup_str(test_setup_dir) -> str:

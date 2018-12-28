@@ -13,7 +13,7 @@ class TestPywbOpera(BaseSimpleChromeTest):
     @pytest.mark.parametrize("test_name", TEST_LIST)
     async def test_all(self, test_name: str) -> None:
         """Default test method, called once per each test listed in the manifest"""
-        replay_frame = await self.goto_test(self.waits.net_idle)
+        replay_frame = await self.goto_test()
         try:
             async with timeout(self.test_to):
                 results = await replay_frame.evaluate(f"{test_name}()")
@@ -39,7 +39,7 @@ class TestPywbChromium(BaseSimpleChromeTest):
     @pytest.mark.parametrize("test_name", TEST_LIST)
     async def test_all(self, test_name: str) -> None:
         """Default test method, called once per each test listed in the manifest"""
-        replay_frame = await self.goto_test(self.waits.net_idle)
+        replay_frame = await self.goto_test()
         try:
             async with timeout(self.test_to):
                 results = await replay_frame.evaluate(f"{test_name}()")
@@ -66,7 +66,7 @@ class TestPywbChrome(BaseSimpleChromeTest):
     @pytest.mark.parametrize("test_name", TEST_LIST)
     async def test_all(self, test_name: str) -> None:
         """Default test method, called once per each test listed in the manifest"""
-        replay_frame = await self.goto_test(self.waits.net_idle)
+        replay_frame = await self.goto_test()
         try:
             async with timeout(self.test_to):
                 results = await replay_frame.evaluate(f"{test_name}()")
@@ -78,7 +78,6 @@ class TestPywbChrome(BaseSimpleChromeTest):
         assert results
 
 
-@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
 @pytest.mark.skipif(OPERA_EXE is None, reason="Opera Is Not Installed")
 @pytest.mark.wrplayertest
 @pytest.mark.operatest
@@ -94,7 +93,7 @@ class TestWRPlayerOpera(BaseSimpleChromeTest):
     @pytest.mark.parametrize("test_name", TEST_LIST)
     async def test_all(self, test_name: str) -> None:
         """Default test method, called once per each test listed in the manifest"""
-        replay_frame = await self.goto_test(self.waits.net_idle)
+        replay_frame = await self.goto_test()
         try:
             async with timeout(self.test_to):
                 results = await replay_frame.evaluate(f"{test_name}()")
@@ -106,7 +105,6 @@ class TestWRPlayerOpera(BaseSimpleChromeTest):
         assert results
 
 
-@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
 @pytest.mark.wrplayertest
 @pytest.mark.chromiumtest
 @pytest.mark.usefixtures("wr_player", "chromium_page")
@@ -121,7 +119,7 @@ class TestWRPlayerChromium(BaseSimpleChromeTest):
     @pytest.mark.parametrize("test_name", TEST_LIST)
     async def test_all(self, test_name: str) -> None:
         """Default test method, called once per each test listed in the manifest"""
-        replay_frame = await self.goto_test(self.waits.net_idle)
+        replay_frame = await self.goto_test()
         try:
             async with timeout(self.test_to):
                 results = await replay_frame.evaluate(f"{test_name}()")
@@ -133,7 +131,6 @@ class TestWRPlayerChromium(BaseSimpleChromeTest):
         assert results
 
 
-@pytest.mark.skipif(not HAVE_PYWB, reason=PYWB_SKIP_REASON)
 @pytest.mark.skipif(CHROME_EXE is None, reason="Chrome Is Not Installed")
 @pytest.mark.wrplayertest
 @pytest.mark.chrometest
@@ -149,7 +146,7 @@ class TestWRPlayerChrome(BaseSimpleChromeTest):
     @pytest.mark.parametrize("test_name", TEST_LIST)
     async def test_all(self, test_name: str) -> None:
         """Default test method, called once per each test listed in the manifest"""
-        replay_frame = await self.goto_test(self.waits.net_idle)
+        replay_frame = await self.goto_test()
         try:
             async with timeout(self.test_to):
                 results = await replay_frame.evaluate(f"{test_name}()")

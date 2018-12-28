@@ -4,6 +4,7 @@ import pytest
 import asyncio
 from asyncio import TimeoutError
 from async_timeout import timeout
+from typing import {% if chromeopts %}Dict,{% endif -%} List, Tuple
 from test_setup.constants import (
     CHROME_EXE,
     OPERA_EXE,
@@ -13,6 +14,8 @@ from test_setup.constants import (
     HAVE_PYWB,
     PYWB_SKIP_REASON,
     TRAVIS_TUNNEL_ID,
+    USE_SAUCE,
+    SAUCE_SKIP_REASON
 )
 from test_setup.loaders import load_file
 from test_setup.wrtest import (
@@ -22,20 +25,24 @@ from test_setup.wrtest import (
 )
 
 {% if has_js %}
-TEST_JS = (
+TEST_JS: str = (
     {{ test_util }}
     + "\n"
     + {{ js }}
 )
 {% else -%}
-TEST_JS = {{ test_util }} + "\n"
+TEST_JS: str = {{ test_util }} + "\n"
 {% endif -%}
 {% if chromeopts %}
-CHROME_OPTS = {{ chromeopts }}
+CHROME_OPTS: Dict[str, str]  = {{ chromeopts }}
 {% endif -%}
-TEST_LIST = {{ test_list }}
-PLAYER_INFO = {{ player_info }}
-PLAYER_URL = "{{ player_url }}"
-PYWB_URL = "{{ pywb_url }}"
+TEST_LIST: List[str] = {{ test_list }}
+PLAYER_INFO: Tuple[str, str, str] = (
+    "{{ player_info[0] }}",
+    "{{ player_info[1] }}",
+    "{{ player_info[2] }}",
+)
+PLAYER_URL: str = "{{ player_url }}"
+PYWB_URL: str = "{{ pywb_url }}"
 
 
