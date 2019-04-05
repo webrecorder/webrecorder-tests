@@ -1,9 +1,9 @@
 from asyncio import AbstractEventLoop
-from typing import ClassVar, Optional, Dict, Tuple
-from typing import Union
 
 from selenium.webdriver.remote.webdriver import WebDriver
-from simplechrome import Page, Frame
+from simplechrome import Page, Frame, NavigationError
+from typing import ClassVar, Dict, Tuple
+from typing import Union
 
 from .constants import Waits, WAITS
 
@@ -61,23 +61,16 @@ class BaseSimpleChromeTest(WRTest):
     page: ClassVar[Page] = None
     loop: ClassVar[AbstractEventLoop] = None
 
-    async def goto_test(self, wait: Optional[Dict[str, str]] = None) -> Frame:
+    async def goto_test(self) -> Frame:
         """
         Navigate the browser to the test page.
-        Optionally waiting for a specific browser event.
 
-        :param wait: Optional wait for event to happen
-        :type wait: WAITS
         :return: The frame containing the replayed page
         :rtype: simplechrome.Frame
         """
-        await self.page.goto(self.url, self.waits.load)
+        try:
+            await self.page.goto(self.url, self.waits.net_almost_idle)
+        except NavigationError:
+            pass
         replay_frame = self.page.frames[1]
-        replay_frame.enable_lifecycle_emitting()
-        await replay_frame.navigation_waiter(loop=self.loop, timeout=15)
-        if wait is not None:
-            if wait == self.waits.load:
-                await replay_frame.loaded_waiter(loop=self.loop, timeout=15)
-            elif wait == self.waits.net_idle:
-                await replay_frame.network_idle_waiter(loop=self.loop, timeout=15)
         return replay_frame

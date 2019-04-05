@@ -36,6 +36,7 @@ class TestWRPlayerFireFox(BaseWRSeleniumTest):
         assert self.driver.execute_async_script(to_inject)
 
 
+@pytest.mark.skipif(not USE_SAUCE, reason=SAUCE_SKIP_REASON)
 @pytest.mark.skipif(
     TRAVIS_TUNNEL_ID is None and SAFARI_EXE is None,
     reason="Safari Testing On Non-OSX Machines Requires Travis",
@@ -58,6 +59,7 @@ class TestPywbSafari(BaseWRSeleniumTest):
         assert self.driver.execute_async_script(to_inject)
 
 
+@pytest.mark.skipif(not USE_SAUCE, reason=SAUCE_SKIP_REASON)
 @pytest.mark.skipif(
     TRAVIS_TUNNEL_ID is None and SAFARI_EXE is None,
     reason="Safari Testing On Non-OSX Machines Requires Travis",
@@ -80,6 +82,7 @@ class TestWRPlayerSafari(BaseWRSeleniumTest):
         assert self.driver.execute_async_script(to_inject)
 
 
+@pytest.mark.skipif(not USE_SAUCE, reason=SAUCE_SKIP_REASON)
 @pytest.mark.skipif(
     TRAVIS_TUNNEL_ID is None and EDGE_EXE is None,
     reason="Edge Testing On Non-Windows Machines Requires Travis",
@@ -102,6 +105,7 @@ class TestPywbEdge(BaseWRSeleniumTest):
         assert self.driver.execute_async_script(to_inject)
 
 
+@pytest.mark.skipif(not USE_SAUCE, reason=SAUCE_SKIP_REASON)
 @pytest.mark.skipif(
     TRAVIS_TUNNEL_ID is None and EDGE_EXE is None,
     reason="Edge Testing On Non-Windows Machines Requires Travis",

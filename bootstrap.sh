@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 s3="https://s3.amazonaws.com/webrecorder-builds"
 player_version="develop"
@@ -13,7 +13,7 @@ download_player() {
 			;;
 	esac
 
-	if [ ! -f "./bin/webrecorder-player" ]; then
+	if [[ ! -f "./bin/webrecorder-player" ]]; then
 		printf "\e[31m PLAYER NOT FOUND \e[39m\n"
 		wget -O bin/webrecorder-player "$s3/webrecorder-player/$player_version/$player"
 		chmod +x ./bin/webrecorder-player
@@ -23,15 +23,18 @@ download_player() {
 }
 
 download_warcs() {
-    warcs=$(find manifests/ -name \*.yml -exec awk 'match($0,/warc-file:\s"warcs\/([^"]+)"/, arr) {print arr[1]}' {} \;)
-    for warc in ${warcs}; do
-		if [ ! -f "./warcs/$warc" ]; then
+    for manifest in $(find manifests/ -name \*.yml); do
+        warcfile=$(grep "warc-file:" "./$manifest")
+        : "${warcfile##warc-file: \"warcs/}"
+        : "${_%%\"}"
+        warc="$_"
+        if [[ ! -f "./warcs/$warc" ]]; then
 			printf "\e[31m WARC NOT FOUND \e[39m%s\n" "$warc"
 			wget -P ./warcs "$s3/tests/$warc"
 		else
 			printf "\e[32m WARC FOUND \e[39m%s\n" "$warc"
 		fi
-	done
+    done
 }
 
 download_geckodriver() {
@@ -44,7 +47,7 @@ download_geckodriver() {
 			;;
 	esac
 
-	if [ ! -f "./bin/geckodriver" ]; then
+	if [[ ! -f "./bin/geckodriver" ]]; then
 	    printf "\e[31m GEKODRIVER NOT FOUND \e[39m\n"
 	    wget -O bin/gekodriver.tar.gz "${dlurl}"
 	    tar xvzf ./bin/gekodriver.tar.gz -C ./bin/
