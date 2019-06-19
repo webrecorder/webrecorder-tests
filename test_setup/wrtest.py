@@ -1,7 +1,7 @@
 from asyncio import AbstractEventLoop
 
 from selenium.webdriver.remote.webdriver import WebDriver
-from simplechrome import Page, Frame, NavigationTimeoutError
+from simplechrome import Page, Frame, NavigationError
 from typing import ClassVar, Dict, Tuple
 from typing import Union
 
@@ -70,7 +70,10 @@ class BaseSimpleChromeTest(WRTest):
         """
         try:
             await self.page.goto(self.url, self.waits.net_almost_idle)
-        except NavigationTimeoutError:
-            pass
+        except NavigationError as e:
+            if e.timeout:
+                pass
+            else:
+                raise
         replay_frame = self.page.frames[1]
         return replay_frame
